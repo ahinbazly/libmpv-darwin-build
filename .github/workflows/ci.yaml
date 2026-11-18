@@ -29,9 +29,10 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@v14
         with:
+          # Match the local Xcode-store build: sandbox on hides the runner Xcode copy.
           extra-conf: |
-            sandbox = true
-            sandbox-fallback = false
+            sandbox = false
+            sandbox-fallback = true
 
       - name: Nix version
         run: nix --version
@@ -70,18 +71,27 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo ${VERSION}
 
+      # SubX only ships the two universal video-default xcframeworks.
+      # --impure is required so nix/overlays/xcode.nix sees SUBX_XCODE_STORE.
       - name: Build
         run: |
+          set -euo pipefail
           VERSION=${{ steps.version.outputs.version }}
-          echo \"$VERSION\" > nix/utils/default/version.nix
-          nix build -v
+          printf '"%s"\n' "$VERSION" > nix/utils/default/version.nix
+          test -n "${SUBX_XCODE_STORE:-}"
+          nix build --impure -L \
+            .#mk-out-archive-xcframeworks-ios-universal-video-default \
+            .#mk-out-archive-xcframeworks-macos-universal-video-default
+          mkdir -p release-assets
+          find result result-1 -name '*.tar.gz' -exec cp {} release-assets/ \;
+          ls -l release-assets
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           path: |
-            result/*.tar.gz
+            release-assets/*.tar.gz
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -89,4 +99,4 @@ jobs:
         with:
           fail_on_unmatched_files: true
           files: |
-            result/*.tar.gz
+            release-assets/*.tar.gz
