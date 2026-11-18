@@ -17,9 +17,9 @@ on:
 jobs:
   ci:
     name: ci
-    # macos-15 arm64 runners were hitting queue/capacity limits; Nix cross-builds universal slices.
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md
-    runs-on: macos-14
+    # Prefer older macOS labels when newer arm64 runners are capacity-limited.
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md
+    runs-on: macos-13
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
     permissions:
