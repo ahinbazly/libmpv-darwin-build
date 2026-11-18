@@ -17,8 +17,11 @@ on:
 jobs:
   ci:
     name: ci
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md
-    runs-on: macos-15
+    # macos-15 arm64 runners were hitting queue/capacity limits; Nix cross-builds universal slices.
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md
+    runs-on: macos-14
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
     permissions:
       contents: write
     steps:
@@ -38,18 +41,17 @@ jobs:
 
       - name: Xcode version
         run: /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -version
-        env:
-          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
 
       # See ${workspace}/nix/overlays/xcode.md
       - name: Set up Xcode in Nix store
         run: |
+          set -euo pipefail
           XCODE_APP=$(realpath /Applications/Xcode.app)
-          NIX_STORE_PATH="/nix/store/v92p4w6nxhyhq6lv0maq5cbb59mbxw5b-Xcode.app"
-          HASH="sha256:d63c91255c8e98603b7f1470067c5225ab673850eed35449f5a0105c936e581c"
-
-          sudo cp -a $XCODE_APP $NIX_STORE_PATH
-          sudo sqlite3 /nix/var/nix/db/db.sqlite "INSERT INTO ValidPaths (path,hash,registrationTime) VALUES ('$NIX_STORE_PATH','$HASH',$(date +%s))"
+          NIX_STORE_PATH=$(nix-store --add-fixed --recursive sha256 "$XCODE_APP")
+          echo "SUBX_XCODE_STORE=$NIX_STORE_PATH" >> "$GITHUB_ENV"
+          mkdir -p "/nix/var/nix/gcroots/per-user/$USER"
+          ln -sf "$NIX_STORE_PATH" "/nix/var/nix/gcroots/per-user/$USER/xcode-ci"
+          nix-store --query --hash "$NIX_STORE_PATH"
 
       - uses: DeterminateSystems/magic-nix-cache-action@v8
 
