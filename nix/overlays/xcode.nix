@@ -1,7 +1,7 @@
 final: prev: {
   darwin = prev.darwin.overrideScope (
-    final: prev: {
-      xcode_16_1 = prev.xcode.overrideAttrs (old: {
+    dFinal: dPrev: {
+      xcode_16_1 = dPrev.xcode.overrideAttrs (old: {
         outputHash = "sha256-1jyRJVyOmGA7fxRwBnxSJatnOFDu01RJ9aAQXJNuWBw=";
       });
 
@@ -12,7 +12,7 @@ final: prev: {
           fromCi = builtins.getEnv "SUBX_XCODE_STORE";
         in
         if fromCi != "" then
-          prev.runCommandLocal "Xcode.app"
+          prev.runCommand "Xcode.app"
             {
               preferLocalBuild = true;
               allowSubstitutes = false;
@@ -21,7 +21,7 @@ final: prev: {
               ln -s ${fromCi} $out
             ''
         else
-          final.xcode_16_1;
+          dFinal.xcode_16_1;
     }
   );
 }

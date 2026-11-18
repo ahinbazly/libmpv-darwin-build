@@ -39,6 +39,9 @@ let
         unzip ${libpngPatch} -d libpng-patch
         rsync -a libpng-patch/libpng-*/ $src/
 
+        # Newer iPhoneOS.sdk (Xcode 26+) drops <fp.h> when TARGET_OS_MAC is set.
+        sed -i.bak 's|#      include <fp.h>|#      include <math.h>|g' $src/pngpriv.h
+
         cp -r $src $out
       '';
 in
