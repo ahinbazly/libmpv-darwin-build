@@ -17,9 +17,9 @@ on:
 jobs:
   ci:
     name: ci
-    # Prefer older macOS labels when newer arm64 runners are capacity-limited.
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md
-    runs-on: macos-13
+    # macos-13/14 are retired; macos-15 arm64 can be congested — use macos-26 pool.
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md
+    runs-on: macos-26
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
     permissions:
